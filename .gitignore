@@ -3,3 +3,4 @@ Lab6/nbproject/private/
 Lab6/dist/
 Lab6/*.class
 !Lab6/*.java
+/Lab 6/dist/
