@@ -1,5 +1,4 @@
 package backend;
-import java.util.Map;
 
 public interface DrawingEngine {
     /* Manage shapes objects */

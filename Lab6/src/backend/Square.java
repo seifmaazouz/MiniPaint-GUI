@@ -3,7 +3,6 @@ package backend;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.util.HashMap;
 import java.util.Map;
 
 public class Square extends AbstractShape {
@@ -27,6 +26,7 @@ public class Square extends AbstractShape {
                 canvas2D.setColor(fillColor);
                 canvas2D.fillRect((int)(position.x - sideLength/2), (int)(position.y - sideLength/2), (int)sideLength, (int)sideLength);
             }
+            canvas2D.setColor(color);
             canvas2D.drawRect((int)(position.x - sideLength/2), (int)(position.y - sideLength/2), (int)sideLength, (int)sideLength);
         }
     }

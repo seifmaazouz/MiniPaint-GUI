@@ -3,7 +3,6 @@ package backend;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.util.HashMap;
 import java.util.Map;
 
 public class Rectangle extends AbstractShape {
@@ -28,6 +27,7 @@ public class Rectangle extends AbstractShape {
                 canvas2D.setColor(fillColor);
                 canvas2D.fillRect((int)(position.x - width/2), (int)(position.y - height/2), (int)width, (int)height);
             }
+            canvas2D.setColor(color);
             canvas2D.drawRect((int)(position.x - width/2), (int)(position.y - height/2), (int)width, (int)height);
         }
     }

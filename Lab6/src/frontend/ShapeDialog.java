@@ -1,28 +1,34 @@
 package frontend;
 import backend.*;
 import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.util.Map;
 import javax.swing.JColorChooser;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 public class ShapeDialog extends javax.swing.JDialog {
     private String positionMode;
     private String shapeSelected;
-    private MiniPaintWindow mainWindow;
-    private Graphics canvas;
+    private final MiniPaintWindow mainWindow;
     private Color penColor;
-    private MiniPaintEngine engine;
+    private final JComponent[] components;
     
     public ShapeDialog(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
         positionMode = "off";
         this.mainWindow = (MiniPaintWindow)parent;
-        canvas = mainWindow.getCanvasGraphics();
         penColor = Color.BLACK; // Default pen color
-        engine = mainWindow.getEngine();
+        this.components = new JComponent[] {
+            btnCreateShape, btnEndPoint, btnPosition, btnStartPoint,
+            chooseColor, inputEndPoint, inputHeight, inputPosition,
+            inputRadius, inputSideLength, inputStartPoint, inputWidth,
+            lblEndPoint, lblHeight, lblPenColor, lblPosition,
+            lblRadius, lblSideLength, lblStartPoint, lblWidth
+        };
     }
 
     public String getPositionMode() {
@@ -58,39 +64,35 @@ public class ShapeDialog extends javax.swing.JDialog {
          this.setVisible(false);
          this.setVisible(true);
 
-         btnCreateShape.setEnabled(false);
-         btnEndPoint.setEnabled(false);
-         btnPosition.setEnabled(false);
-         btnStartPoint.setEnabled(false);
-         chooseColor.setEnabled(false);
-         inputEndPoint.setEnabled(false);
-         inputHeight.setEnabled(false);
-         inputPosition.setEnabled(false);
-         inputRadius.setEnabled(false);
-         inputSideLength.setEnabled(false);
-         inputStartPoint.setEnabled(false);
-         inputWidth.setEnabled(false);
+        for (JComponent component : components) {
+            if(!((component instanceof JLabel) && component != chooseColor))
+                component.setEnabled(false);
+        }
     }
     
     public void resetMode() {
         mainWindow.resetMode();
 
-        btnCreateShape.setEnabled(true);
-        btnEndPoint.setEnabled(true);
-        btnPosition.setEnabled(true);
-        btnStartPoint.setEnabled(true);
-        chooseColor.setEnabled(true);
-        inputEndPoint.setEnabled(true);
-        inputHeight.setEnabled(true);
-        inputPosition.setEnabled(true);
-        inputRadius.setEnabled(true);
-        inputSideLength.setEnabled(true);
-        inputStartPoint.setEnabled(true);
-        inputWidth.setEnabled(true);
+        for (JComponent component : components) {
+            if(!((component instanceof JLabel) && component != chooseColor))
+                component.setEnabled(true);
+        }
     }
     
     public void updateFields(String shapeSelected) {
         this.shapeSelected = shapeSelected;
+        
+        // reset inputs
+        positionMode = "off";
+        inputEndPoint.setText("");
+        inputHeight.setText("");
+        inputPosition.setText("");
+        inputRadius.setText("");
+        inputSideLength.setText("");
+        inputStartPoint.setText("");
+        inputWidth.setText("");
+        penColor = Color.BLACK;
+        chooseColor.setBackground(penColor);
         
         lblRadius.setVisible("Circle".equals(shapeSelected));
         inputRadius.setVisible("Circle".equals(shapeSelected));
@@ -101,7 +103,6 @@ public class ShapeDialog extends javax.swing.JDialog {
         lblEndPoint.setVisible("Line".equals(shapeSelected));
         inputEndPoint.setVisible("Line".equals(shapeSelected));
         btnEndPoint.setVisible("Line".equals(shapeSelected));
-
 
         lblWidth.setVisible("Rectangle".equals(shapeSelected));
         inputWidth.setVisible("Rectangle".equals(shapeSelected));
@@ -146,15 +147,13 @@ public class ShapeDialog extends javax.swing.JDialog {
         lblSideLength = new javax.swing.JLabel();
         inputSideLength = new javax.swing.JTextField();
 
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Enter Shape Properties");
         setLocationByPlatform(true);
         setMinimumSize(new java.awt.Dimension(320, 300));
         setPreferredSize(new java.awt.Dimension(320, 300));
         setSize(new java.awt.Dimension(320, 300));
         addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosed(java.awt.event.WindowEvent evt) {
-                formWindowClosed(evt);
-            }
             public void windowClosing(java.awt.event.WindowEvent evt) {
                 formWindowClosing(evt);
             }
@@ -500,155 +499,110 @@ public class ShapeDialog extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    // helper method
+    private Point parsePoint(String textPosition, String name) {
+        String[] xy = textPosition.split(",\\s*");
+        if (xy.length != 2)
+            throw new IllegalArgumentException("Incorrect format for " + name + " used. Please enter position points (x, y) formatted.");
+        try {
+            Point point = new Point(Integer.parseInt(xy[0]), Integer.parseInt(xy[1]));
+            return point;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid " + name + " coordinates. Both x and y must be valid integers.");
+        }
+    }
     
     private void btnCreateShapeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreateShapeActionPerformed
         positionMode = "off";
         Shape shape = null;
         Point userPosition = null;
-        String textPosition;
+        String textPosition = "";
         
-        switch (shapeSelected) {
-            case "Circle":
-            String textRadius = inputRadius.getText().strip();
-            textPosition = inputPosition.getText().strip();
-            if(textRadius.equals("") || textPosition.equals("")) {
-                JOptionPane.showMessageDialog(null, "Some fields are Empty!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            else {
-                try {
-                    double radius = Double.parseDouble(textRadius);
-                    if(radius<=0)
-                    throw new NumberFormatException();
-                    else {
-                        shape = new Circle();
-                        try {
-                            String[] xy = textPosition.split(",\\s*");
-                            if(xy.length > 2 || xy.length == 0)
-                            throw new ArrayIndexOutOfBoundsException();
-                            userPosition = new Point(Integer.parseInt(xy[0]), Integer.parseInt(xy[1]));
-                            shape.setProperties(Map.of("radius", radius));
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            JOptionPane.showMessageDialog(null, "Incorrect format for position used. Please enter position (x, y) formatted.", "Error", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
+        try {
+            switch (shapeSelected) {
+                case "Circle":
+                    String textRadius = inputRadius.getText().strip();
+                    textPosition = inputPosition.getText().strip();
+                    if(textRadius.equals("") || textPosition.equals(""))
+                        throw new IllegalArgumentException("Some fields are empty!");
+                    double radius;
+                    try {
+                        radius = Double.parseDouble(textRadius);
+                        if (radius <= 0) 
+                            throw new IllegalArgumentException("Radius must be a positive number.");
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("Invalid radius. Please enter a valid number.");
                     }
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(null, "Please enter positive radius and position number values.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-            }
-            break;
-            case "Line":
-            String textStartPoint = inputStartPoint.getText().strip();
-            String textEndPoint = inputEndPoint.getText().strip();
-            if(textStartPoint.equals("") || textEndPoint.equals("")) {
-                JOptionPane.showMessageDialog(null, "Some fields are Empty!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            else {
-                shape = new LineSegment();
-                try {
-                    String[] xy;
-                    xy = textStartPoint.split(",\\s*");
-                    if(xy.length > 2 || xy.length == 0)
-                    throw new ArrayIndexOutOfBoundsException();
-                    userPosition = new Point(Integer.parseInt(xy[0]), Integer.parseInt(xy[1]));
-
-                    xy = textEndPoint.split(",\\s*");
-                    if(xy.length > 2 || xy.length == 0)
-                    throw new ArrayIndexOutOfBoundsException();
-                    shape.setProperties(Map.of("endX", Double.parseDouble(xy[0])));
-                    shape.setProperties(Map.of("endY", Double.parseDouble(xy[1])));
-                } catch (ArrayIndexOutOfBoundsException e) {
-                    JOptionPane.showMessageDialog(null, "Incorrect format for points used. Please enter position points (x, y) formatted.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(null, "Please enter a positive number for start and end point values.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-            }
-            break;
-            case "Square":
-            String textSideLength = inputSideLength.getText().strip();
-            textPosition = inputPosition.getText().strip();
-            if(textSideLength.equals("") || textPosition.equals("")) {
-                JOptionPane.showMessageDialog(null, "Some fields are Empty!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            else {
-                try {
-                    double sideLength = Integer.parseInt(textSideLength);
-                    if(sideLength<=0)
-                    throw new NumberFormatException();
-                    else {
-                        shape = new Square();
-                        try {
-                            String[] xy = textPosition.split(",\\s*");
-                            if(xy.length > 2 || xy.length == 0)
-                            throw new ArrayIndexOutOfBoundsException();
-                            userPosition = new Point(Integer.parseInt(xy[0]), Integer.parseInt(xy[1]));
-                            shape.setProperties(Map.of("sideLength", sideLength));
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            JOptionPane.showMessageDialog(null, "Incorrect format for position used. Please enter position (x, y) formatted.", "Error", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
+                    userPosition = parsePoint(textPosition, "Position");
+                    shape = new Circle();
+                    shape.setProperties(Map.of("radius", radius));
+                    break;
+                case "Line":
+                    String textStartPoint = inputStartPoint.getText().strip();
+                    String textEndPoint = inputEndPoint.getText().strip();
+                    if(textStartPoint.equals("") || textEndPoint.equals(""))
+                        throw new IllegalArgumentException("Some fields are empty!");
+                    userPosition = parsePoint(textStartPoint, "Start Point");
+                    Point endPoint = parsePoint(textEndPoint, "End Point");
+                    shape = new LineSegment();
+                    shape.setProperties(Map.of("endX", (double)(endPoint.x), "endY", (double)(endPoint.y)));
+                    break;
+                case "Square":
+                    String textSideLength = inputSideLength.getText().strip();
+                    textPosition = inputPosition.getText().strip();
+                    if(textSideLength.equals("") || textPosition.equals(""))
+                        throw new IllegalArgumentException("Some fields are empty!");
+                    double sideLength; 
+                    try {
+                        sideLength = Integer.parseInt(textSideLength);
+                        if(sideLength<=0)
+                            throw new IllegalArgumentException("Side Length must be a positive number.");
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("Invalid side length. Please enter valid numbers.");
                     }
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(null, "Please enter positive side length and position number values.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-            }
-            break;
-            case "Rectangle":
-            String textWidth = inputWidth.getText().strip();
-            String textHeight = inputHeight.getText().strip();
-            textPosition = inputPosition.getText().strip();
-            if(textWidth.equals("") || textHeight.equals("")) {
-                JOptionPane.showMessageDialog(null, "Some fields are Empty!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            else {
-                try {
-                    double width = Integer.parseInt(textWidth);
-                    double height = Integer.parseInt(textHeight);
+                    userPosition = parsePoint(textPosition, "Position");
+                    shape = new Square();
+                    shape.setProperties(Map.of("sideLength", sideLength));
+                    break;
+                case "Rectangle":
+                    String textWidth = inputWidth.getText().strip();
+                    String textHeight = inputHeight.getText().strip();
+                    textPosition = inputPosition.getText().strip();
+                    if(textWidth.equals("") || textHeight.equals(""))
+                        throw new IllegalArgumentException("Some fields are empty!");
+                    double width;
+                    double height;
+                    try {
+                        width = Double.parseDouble(textWidth);
+                        height = Double.parseDouble(textHeight);
+                        if (width <= 0 || height <= 0) 
+                            throw new IllegalArgumentException("Width and Height must be positive numbers.");
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("Invalid width or height. Please enter valid numbers.");
+                    }
                     if(width<=0 || height<=0)
-                    throw new NumberFormatException();
-                    else {
-                        shape = new Rectangle();
-                        try {
-                            String[] xy = textPosition.split(",\\s*");
-                            if(xy.length > 2 || xy.length == 0)
-                            throw new ArrayIndexOutOfBoundsException();
-                            userPosition = new Point(Integer.parseInt(xy[0]), Integer.parseInt(xy[1]));
-                            shape.setProperties(Map.of("width", width, "height", height));
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            JOptionPane.showMessageDialog(null, "Incorrect format for position used. Please enter position (x, y) formatted.", "Error", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-                    }
-                } catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(null, "Please enter positive width, height and position number values.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
+                        throw new IllegalArgumentException("Width and Height must be positive numbers.");
+                    shape = new Rectangle();
+                    userPosition = parsePoint(textPosition, "Position");
+                    shape.setProperties(Map.of("width", width, "height", height));
+                    break;
             }
-            break;
-        }
 
-        // position out of bounds
-        if (mainWindow.isPositionOutOfBounds(userPosition)) {
-            JOptionPane.showMessageDialog(null, "Position is out of bounds!", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        
-        // for all shapes
-        if (shape != null && userPosition != null) {
-            shape.setPosition(userPosition);
-            shape.setColor(penColor);
-            engine.addShape(shape);
-            engine.refresh(canvas);
-            this.dispose();
-            mainWindow.updateComboBox();
+
+            // for all shapes
+            if (shape != null && userPosition != null) {
+                // position out of bounds
+                if (mainWindow.isPositionOutOfBounds(userPosition))
+                    throw new Exception("Position is out of bounds!");
+                shape.setPosition(userPosition);
+                shape.setColor(penColor);
+                mainWindow.addShape(shape);
+                this.setVisible(false);
+            }
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null,"Error: "  + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnCreateShapeActionPerformed
 
@@ -672,22 +626,10 @@ public class ShapeDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnEndPointActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        this.dispose();
-    }//GEN-LAST:event_formWindowClosing
-
-    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
         resetMode();
         positionMode = "off";
-        inputEndPoint.setText("");
-        inputHeight.setText("");
-        inputPosition.setText("");
-        inputRadius.setText("");
-        inputSideLength.setText("");
-        inputStartPoint.setText("");
-        inputWidth.setText("");
-        penColor = Color.BLACK;
-        chooseColor.setBackground(penColor);
-    }//GEN-LAST:event_formWindowClosed
+        this.setVisible(false);
+    }//GEN-LAST:event_formWindowClosing
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

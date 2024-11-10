@@ -3,7 +3,6 @@ package backend;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.util.HashMap;
 import java.util.Map;
 
 public class LineSegment extends AbstractShape {
@@ -23,9 +22,9 @@ public class LineSegment extends AbstractShape {
             double endY = properties.get("endY");
             
             if(fillColor != null)
-                canvas2D.setColor(fillColor);
-            else
-                canvas2D.setColor(color);
+                color = fillColor;
+
+            canvas2D.setColor(color);
             canvas2D.drawLine(position.x, position.y, (int)endX, (int)endY);
         }
     }

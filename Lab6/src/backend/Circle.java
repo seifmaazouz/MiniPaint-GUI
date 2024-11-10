@@ -33,6 +33,7 @@ public class Circle extends AbstractShape {
                 canvas2D.setColor(fillColor);
                 canvas2D.fill(circle);
             }
+            canvas2D.setColor(color);
             canvas2D.draw(circle);
         }
     }

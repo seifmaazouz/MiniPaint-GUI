@@ -1,16 +1,21 @@
 package frontend;
 import backend.*;
-import java.awt.Color;
+import java.awt.BasicStroke;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
-import javax.swing.JColorChooser;
+import java.util.HashMap;
+import java.util.Map;
+import javax.swing.JComponent;
 
 public class MiniPaintWindow extends javax.swing.JFrame {
     
-    private MiniPaintEngine engine;
-    private Graphics2D graphics;
-    private ShapeDialog shapeDialog;
+    private final MiniPaintEngine engine;
+    private final Graphics2D graphics;
+    private final ShapeDialog shapeDialog;
+    private final JComponent[] components;
+    private Map<String, Shape> comboBoxItems = new HashMap<>();
+    int circleCount, lineCount, squareCount, rectangleCount;
     
     public MiniPaintWindow() {
         initComponents(); 
@@ -18,9 +23,11 @@ public class MiniPaintWindow extends javax.swing.JFrame {
         graphics = (Graphics2D)canvas.getGraphics();
         shapeDialog = new ShapeDialog(this, rootPaneCheckingEnabled);
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON); // make drawing smoother
-
+        graphics.setStroke(new BasicStroke(2)); // make pen thicker
+        circleCount = lineCount = squareCount = rectangleCount = 0;
+        this.components = new JComponent[] {btnCircle, btnColorize, btnDelete, btnLine, btnRectangle, btnSquare, comboBox, drawingPanel};
     }
-   
+    
     public Graphics2D getCanvasGraphics() {
         return graphics;
     }
@@ -36,55 +43,81 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     }
     
     public void selectPositionMode() {
-        btnCircle.setEnabled(false);
-        btnColorize.setEnabled(false);
-        btnDelete.setEnabled(false);
-        btnLine.setEnabled(false);
-        btnRectangle.setEnabled(false);
-        btnSquare.setEnabled(false);
-        comboBox.setEnabled(false);
+        for (JComponent component : components) {
+            if(component != drawingPanel)
+                component.setEnabled(false);
+        }
+    }
+    
+    public void addShape(Shape shape) {
+        engine.addShape(shape);
+        engine.refresh(graphics);
+        addToComboBox(shape);
     }
 
     public void resetMode() {
-        btnCircle.setEnabled(true);
-        btnColorize.setEnabled(true);
-        btnDelete.setEnabled(true);
-        btnLine.setEnabled(true);
-        btnRectangle.setEnabled(true);
-        btnSquare.setEnabled(true);
-        comboBox.setEnabled(true);
+        for (JComponent component : components) {
+            if(component != drawingPanel)
+                component.setEnabled(true);
+        }
     }
 
-    public void updateComboBox() {
-        comboBox.removeAllItems();
-        comboBox.addItem("Choose Shape");
-        int circleCount = 0, lineCount = 0, squareCount = 0, rectangleCount = 0;
-        Shape[] shapes = engine.getShapes();
-        for(Shape shape : shapes) {
+    private void addToComboBox(Shape shape) {        
+        String uniqueName = "";
+        
+        // reset count
+        if(comboBox.getItemCount() == 1)
+            circleCount = lineCount = squareCount = rectangleCount = 0;
+
+        if (shape instanceof Circle) {
+            uniqueName = String.format("circle%02d", circleCount+1);
+            
+        }
+        else if (shape instanceof LineSegment) {
+            uniqueName = (String.format("line%02d", lineCount+1));
+        }  
+        else if (shape instanceof Square) {
+            uniqueName = String.format("square%02d", squareCount+1);
+        }
+        else if (shape instanceof Rectangle) {
+            uniqueName = String.format("rectangle%02d", rectangleCount+1);
+        }
+        
+        if(!comboBoxItems.containsKey(uniqueName)) {
+            comboBoxItems.put(uniqueName, shape);
+            comboBox.addItem(uniqueName);
+            // increment count
             if (shape instanceof Circle) {
-                circleCount++;
-                comboBox.addItem(String.format("circle%02d", circleCount));
-            }
-            else if (shape instanceof LineSegment) {
+                    circleCount++;
+            } else if (shape instanceof LineSegment) {
                 lineCount++;
-                comboBox.addItem(String.format("line%02d", lineCount));
-            }  
-            else if (shape instanceof Square) {
+            } else if (shape instanceof Square) {
                 squareCount++;
-                comboBox.addItem(String.format("square%02d", squareCount));
-            }
-            else if (shape instanceof Rectangle) {
+            } else if (shape instanceof Rectangle) {
                 rectangleCount++;
-                comboBox.addItem(String.format("rectangle%02d", rectangleCount));
             }
         }
-        comboBox.setSelectedIndex(0);
+        
+        
+        comboBox.setSelectedIndex(0); // Select choose shape
+    }
+    
+    private void removeFromComboBox(String uniqueName) {
+        if(!comboBoxItems.containsKey(uniqueName))
+            return;
+                    
+        for (int i = 0; i < comboBox.getItemCount(); i++) {
+            if (comboBox.getItemAt(i).equals(uniqueName)) {
+                comboBox.removeItemAt(i);
+                break;
+            }
+        }
+        comboBoxItems.remove(uniqueName);
     }
    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        java.awt.GridBagConstraints gridBagConstraints;
 
         drawingPanel = new javax.swing.JPanel();
         canvas = new java.awt.Canvas();
@@ -245,11 +278,11 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
-        int index = comboBox.getSelectedIndex() - 1;
-        if(index != -1) {
-            Shape shape = engine.getShapes()[index];
+        int index = comboBox.getSelectedIndex();
+        if(index != 0) {
+            Shape shape = engine.getShapes()[index - 1];
             engine.removeShape(shape);
-            updateComboBox();
+            removeFromComboBox(comboBox.getItemAt(index));
             graphics.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
             engine.refresh(graphics);
         }
@@ -281,20 +314,21 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_btnRectangleActionPerformed
 
     private void canvasMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_canvasMousePressed
-        shapeDialog.setPositionMode(evt.getPoint());
-        shapeDialog.resetMode();
-        shapeDialog.setModal(true);
-        shapeDialog.setVisible(false);
-        shapeDialog.setVisible(true);
+        if(!shapeDialog.getPositionMode().equals("off")) {
+            shapeDialog.setPositionMode(evt.getPoint());
+            shapeDialog.resetMode();
+            shapeDialog.setModal(true);
+            shapeDialog.setVisible(false);
+            shapeDialog.setVisible(true);
+        }
     }//GEN-LAST:event_canvasMousePressed
 
     private void btnColorizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColorizeActionPerformed
-        int index = comboBox.getSelectedIndex() - 1;
-        if(index != -1) {
-            Shape shape = engine.getShapes()[index];
-            Color fillColor = JColorChooser.showDialog(null, "Choose fill color", Color.WHITE);
-            shape.setFillColor(fillColor);
-            shape.draw(graphics);
+        int index = comboBox.getSelectedIndex();
+        if(index != 0) {
+            String uniqueName = comboBox.getItemAt(index);
+            Shape shape = comboBoxItems.get(uniqueName);
+            new ColorDialog(this, true, shape.getColor(), shape.getFillColor(), shape, uniqueName);
         }
     }//GEN-LAST:event_btnColorizeActionPerformed
     
