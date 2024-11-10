@@ -21,18 +21,21 @@ public class MiniPaintWindow extends javax.swing.JFrame {
 
     }
    
-    protected MiniPaintEngine getEngine() {
+    public Graphics2D getCanvasGraphics() {
+        return graphics;
+    }
+    public MiniPaintEngine getEngine() {
         return engine;
     }
     
-    protected boolean isPositionOutOfBounds(Point userPosition) {
+    public boolean isPositionOutOfBounds(Point userPosition) {
         if(userPosition.x > canvas.getWidth() || userPosition.x < 0 || userPosition.y > canvas.getWidth() || userPosition.y < 0) {
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
     
-    protected void selectPositionMode() {
+    public void selectPositionMode() {
         btnCircle.setEnabled(false);
         btnColorize.setEnabled(false);
         btnDelete.setEnabled(false);
@@ -42,9 +45,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
         comboBox.setEnabled(false);
     }
 
-    private void resetMode() {
-        shapeDialog.resetMode();
-        
+    public void resetMode() {
         btnCircle.setEnabled(true);
         btnColorize.setEnabled(true);
         btnDelete.setEnabled(true);
@@ -54,7 +55,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
         comboBox.setEnabled(true);
     }
 
-    protected void updateComboBox() {
+    public void updateComboBox() {
         comboBox.removeAllItems();
         comboBox.addItem("Choose Shape");
         int circleCount = 0, lineCount = 0, squareCount = 0, rectangleCount = 0;
@@ -281,7 +282,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
 
     private void canvasMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_canvasMousePressed
         shapeDialog.setPositionMode(evt.getPoint());
-        resetMode();
+        shapeDialog.resetMode();
         shapeDialog.setModal(true);
         shapeDialog.setVisible(false);
         shapeDialog.setVisible(true);
@@ -296,7 +297,6 @@ public class MiniPaintWindow extends javax.swing.JFrame {
             shape.draw(graphics);
         }
     }//GEN-LAST:event_btnColorizeActionPerformed
-
     
     
     public static void main(String args[]) {

@@ -20,7 +20,7 @@ public class ShapeDialog extends javax.swing.JDialog {
         initComponents();
         positionMode = "off";
         this.mainWindow = (MiniPaintWindow)parent;
-        canvas = mainWindow.getGraphics();
+        canvas = mainWindow.getCanvasGraphics();
         penColor = Color.BLACK; // Default pen color
         engine = mainWindow.getEngine();
     }
@@ -72,48 +72,52 @@ public class ShapeDialog extends javax.swing.JDialog {
          inputWidth.setEnabled(false);
     }
     
-    protected void resetMode() {
-         btnCreateShape.setEnabled(true);
-         btnEndPoint.setEnabled(true);
-         btnPosition.setEnabled(true);
-         btnStartPoint.setEnabled(true);
-         chooseColor.setEnabled(true);
-         inputEndPoint.setEnabled(true);
-         inputHeight.setEnabled(true);
-         inputPosition.setEnabled(true);
-         inputRadius.setEnabled(true);
-         inputSideLength.setEnabled(true);
-         inputStartPoint.setEnabled(true);
-         inputWidth.setEnabled(true);
+    public void resetMode() {
+        mainWindow.resetMode();
+
+        btnCreateShape.setEnabled(true);
+        btnEndPoint.setEnabled(true);
+        btnPosition.setEnabled(true);
+        btnStartPoint.setEnabled(true);
+        chooseColor.setEnabled(true);
+        inputEndPoint.setEnabled(true);
+        inputHeight.setEnabled(true);
+        inputPosition.setEnabled(true);
+        inputRadius.setEnabled(true);
+        inputSideLength.setEnabled(true);
+        inputStartPoint.setEnabled(true);
+        inputWidth.setEnabled(true);
     }
     
-    protected void updateFields(String shapeSelected) {
-         lblRadius.setVisible("Circle".equals(shapeSelected));
-         inputRadius.setVisible("Circle".equals(shapeSelected));
+    public void updateFields(String shapeSelected) {
+        this.shapeSelected = shapeSelected;
+        
+        lblRadius.setVisible("Circle".equals(shapeSelected));
+        inputRadius.setVisible("Circle".equals(shapeSelected));
 
-         lblStartPoint.setVisible("Line".equals(shapeSelected));
-         inputStartPoint.setVisible("Line".equals(shapeSelected));
-         btnStartPoint.setVisible("Line".equals(shapeSelected));
-         lblEndPoint.setVisible("Line".equals(shapeSelected));
-         inputEndPoint.setVisible("Line".equals(shapeSelected));
-         btnEndPoint.setVisible("Line".equals(shapeSelected));
+        lblStartPoint.setVisible("Line".equals(shapeSelected));
+        inputStartPoint.setVisible("Line".equals(shapeSelected));
+        btnStartPoint.setVisible("Line".equals(shapeSelected));
+        lblEndPoint.setVisible("Line".equals(shapeSelected));
+        inputEndPoint.setVisible("Line".equals(shapeSelected));
+        btnEndPoint.setVisible("Line".equals(shapeSelected));
 
 
-         lblWidth.setVisible("Rectangle".equals(shapeSelected));
-         inputWidth.setVisible("Rectangle".equals(shapeSelected));
-         lblHeight.setVisible("Rectangle".equals(shapeSelected));
-         inputHeight.setVisible("Rectangle".equals(shapeSelected));
+        lblWidth.setVisible("Rectangle".equals(shapeSelected));
+        inputWidth.setVisible("Rectangle".equals(shapeSelected));
+        lblHeight.setVisible("Rectangle".equals(shapeSelected));
+        inputHeight.setVisible("Rectangle".equals(shapeSelected));
 
-         lblSideLength.setVisible("Square".equals(shapeSelected));
-         inputSideLength.setVisible("Square".equals(shapeSelected));
+        lblSideLength.setVisible("Square".equals(shapeSelected));
+        inputSideLength.setVisible("Square".equals(shapeSelected));
 
-         lblPosition.setVisible(!"Line".equals(shapeSelected));
-         inputPosition.setVisible(!"Line".equals(shapeSelected));   
-         btnPosition.setVisible(!"Line".equals(shapeSelected));  
+        lblPosition.setVisible(!"Line".equals(shapeSelected));
+        inputPosition.setVisible(!"Line".equals(shapeSelected));   
+        btnPosition.setVisible(!"Line".equals(shapeSelected));  
 
-         this.setTitle("Enter " + shapeSelected + " Properties");
-         this.setModal(true);
-         this.setVisible(true);
+        this.setTitle("Enter " + shapeSelected + " Properties");
+        this.setModal(true);
+        this.setVisible(true);
     }
     
     @SuppressWarnings("unchecked")
@@ -142,12 +146,19 @@ public class ShapeDialog extends javax.swing.JDialog {
         lblSideLength = new javax.swing.JLabel();
         inputSideLength = new javax.swing.JTextField();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Enter Shape Properties");
         setLocationByPlatform(true);
         setMinimumSize(new java.awt.Dimension(320, 300));
         setPreferredSize(new java.awt.Dimension(320, 300));
         setSize(new java.awt.Dimension(320, 300));
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
         getContentPane().setLayout(new java.awt.GridBagLayout());
 
         lblRadius.setBackground(new java.awt.Color(102, 255, 153));
@@ -495,6 +506,7 @@ public class ShapeDialog extends javax.swing.JDialog {
         Shape shape = null;
         Point userPosition = null;
         String textPosition;
+        
         switch (shapeSelected) {
             case "Circle":
             String textRadius = inputRadius.getText().strip();
@@ -658,6 +670,24 @@ public class ShapeDialog extends javax.swing.JDialog {
     private void btnEndPointActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEndPointActionPerformed
         selectPositionMode("endPoint");
     }//GEN-LAST:event_btnEndPointActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        this.dispose();
+    }//GEN-LAST:event_formWindowClosing
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        resetMode();
+        positionMode = "off";
+        inputEndPoint.setText("");
+        inputHeight.setText("");
+        inputPosition.setText("");
+        inputRadius.setText("");
+        inputSideLength.setText("");
+        inputStartPoint.setText("");
+        inputWidth.setText("");
+        penColor = Color.BLACK;
+        chooseColor.setBackground(penColor);
+    }//GEN-LAST:event_formWindowClosed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
