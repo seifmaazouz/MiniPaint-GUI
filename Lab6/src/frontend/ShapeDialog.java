@@ -151,6 +151,7 @@ public class ShapeDialog extends javax.swing.JDialog {
         setLocationByPlatform(true);
         setMinimumSize(new java.awt.Dimension(320, 300));
         setPreferredSize(new java.awt.Dimension(320, 300));
+        setResizable(false);
         setSize(new java.awt.Dimension(320, 300));
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
