@@ -10,6 +10,7 @@ public abstract class AbstractShape implements Shape {
     private Map<String, Double> properties;
     private Color color;
     private Color fillColor;
+    private String uniqueName;
     
     public AbstractShape() {
         properties = new HashMap<>();
@@ -21,6 +22,14 @@ public abstract class AbstractShape implements Shape {
     }
     public Point getPosition() {
         return position;
+    }
+    
+    /* set unique name */
+    public void setName(String uniqueName) {
+        this.uniqueName = uniqueName;
+    }
+    public String getName() {
+        return uniqueName;
     }
 
     /* update shape specific properties (e.g., radius) */

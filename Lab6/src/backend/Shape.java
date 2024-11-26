@@ -8,6 +8,10 @@ public interface Shape {
     /* set position */
     public void setPosition(Point position);
     public Point getPosition();
+    
+    /* set unique name */
+    public void setName(String uniqueName);
+    public String getName();
 
     /* update shape specific properties (e.g., radius) */
     public void setProperties(Map<String, Double> properties);

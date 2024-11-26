@@ -1,7 +1,6 @@
 package frontend;
 import backend.*;
 import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.Point;
 import java.util.Map;
 import javax.swing.JColorChooser;
@@ -628,7 +627,7 @@ public class ShapeDialog extends javax.swing.JDialog {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         resetMode();
         positionMode = "off";
-        this.setVisible(false);
+        dispose();
     }//GEN-LAST:event_formWindowClosing
 
 
