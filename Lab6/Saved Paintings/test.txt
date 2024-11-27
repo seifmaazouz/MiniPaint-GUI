@@ -1,0 +1,5 @@
+backend.Circle,184-187,-16777216,null,radius:20.000000
+backend.Circle,137-116,-16777216,null,radius:10.000000
+backend.LineSegment,424-341,-6750208,null,endY:7.000000-endX:99.000000
+backend.Square,397-165,-16777216,-10027162,sideLength:100.000000
+backend.Square,39163,2480,null,sidength:15.000000

@@ -21,7 +21,7 @@ public class MiniPaintEngine implements DrawingEngine {
             circleCount = lineCount = squareCount = rectangleCount = 0; 
         }
         // check for duplicates
-        if(shapes.containsKey(shape)) 
+        if(shapes.containsValue(shape)) 
             return;
         
         String uniqueName = "";
@@ -38,13 +38,16 @@ public class MiniPaintEngine implements DrawingEngine {
             uniqueName = String.format("rectangle%02d", ++rectangleCount);
         }
         
-        if(!uniqueName.isEmpty() && !shapes.containsValue(uniqueName)) {
+        if(!uniqueName.isEmpty() && !shapes.containsKey(uniqueName)) {
             shape.setName(uniqueName);
             shapes.put(uniqueName, shape);
         }
     }
     public void removeShape(Shape shape) {
         shapes.remove(shape.getName());
+    }
+    public void removeAllShapes() {
+        shapes.clear();
     }
     
     /* return the created shapes objects */
