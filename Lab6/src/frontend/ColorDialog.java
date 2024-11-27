@@ -7,10 +7,12 @@ public class ColorDialog extends javax.swing.JDialog {
     private Color penColor;
     private Color fillColor;
     private Shape shape;
+    private MiniPaintWindow mainWindow;
 
     public ColorDialog(java.awt.Frame parent, boolean modal, Shape shape) {
         super(parent, modal);
         initComponents();
+        mainWindow = (MiniPaintWindow)parent;
         this.shape = shape;
         this.penColor = shape.getColor();
         btnPenColor.setBackground(penColor);
@@ -153,6 +155,8 @@ public class ColorDialog extends javax.swing.JDialog {
     private void btnDoneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDoneActionPerformed
         shape.setColor(penColor);
         shape.setFillColor(fillColor);
+        mainWindow.updateUndoState();
+        mainWindow.updateCanvas();        
         this.dispose();
     }//GEN-LAST:event_btnDoneActionPerformed
 

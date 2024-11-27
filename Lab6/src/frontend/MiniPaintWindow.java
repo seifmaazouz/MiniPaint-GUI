@@ -9,9 +9,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -23,6 +25,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     private final ShapeDialog shapeDialog;
     private final JComponent[] components;
     private final File saveDirectory;
+    private Stack<String[]> undoStack, redoStack;
     
     public MiniPaintWindow() {
         initComponents(); 
@@ -31,6 +34,17 @@ public class MiniPaintWindow extends javax.swing.JFrame {
         this.components = new JComponent[] {btnCircle, btnColorize, btnDelete, btnLine, btnRectangle, btnSquare, comboBox, drawingPanel, btnMove, btnResize, btnSave, btnLoad, btnUndo, btnRedo};
         saveDirectory = new File(System.getProperty("user.dir") + File.separator + "Saved Paintings"); // FIle.separator puts '\' or '/' according to OS
         fileChooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt")); // Show only text files;
+        undoStack = new Stack<>();
+        undoStack.push(new String[0]); // initial empty canvas with no shapes
+        redoStack = new Stack<>();
+    }
+    
+    public void updateUndoState() {
+        undoStack.push(getLineFormattedShapes(engine.getShapes()));
+        redoStack.clear(); // reset undo
+    }
+    public void updateCanvas() {
+        drawingPanel.repaint();
     }
     
     public boolean isPositionOutOfBounds(Point userPosition) {
@@ -51,6 +65,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
         engine.addShape(shape);
         addToComboBox(shape);
         drawingPanel.repaint();
+        updateUndoState();
     }
 
     public void resetMode() {
@@ -83,11 +98,86 @@ public class MiniPaintWindow extends javax.swing.JFrame {
             if (comboBox.getItemAt(i).equals(uniqueName)) {
                 comboBox.removeItemAt(i);
                 engine.removeShape(shape);
+                updateUndoState();
                 break;
             }
         }
     }
    
+    private String[] getLineFormattedShapes(Shape[] shapes) {
+        List<String> lines = new ArrayList<>();
+        for(Shape shape : shapes) {
+            String line = "";
+            Point position = shape.getPosition();
+            Color color = shape.getColor();
+            Color fillColor = shape.getFillColor();
+            if(fillColor != null)
+                line += String.format("%s,%d-%d,%d,%d", shape.getClass().getName(), position.x, position.y, color.getRGB(), fillColor.getRGB());
+            else
+                line += String.format("%s,%d-%d,%d,null", shape.getClass().getName(), position.x, position.y, color.getRGB());
+            Map<String, Double> properties = shape.getProperties();
+            String strProperties = ",";
+            for(Map.Entry<String, Double> entry : properties.entrySet()) {
+                strProperties += String.format("%s:%f-", entry.getKey(), entry.getValue());
+            }
+            line += strProperties.substring(0, strProperties.length()-1);
+            line += "\n"; // new line for next shape
+            lines.add(line);
+        }
+        return lines.toArray(new String[lines.size()]);
+    }
+    
+    private List<Shape> getShapesFromLineFormat(String[] lines) throws IOException {
+        List<Shape> shapes = new ArrayList<>();
+            for(String line : lines) {
+                //skip empty line
+                if(line.isEmpty())
+                    continue;
+                // decode data in each line
+                String[] data = line.split(",");
+                // check if line format is correct
+                if(data.length != 5)
+                    throw new IOException("File does not use correct format or was corrupted.");
+                String[] xyPosition = data[1].split("-");
+                Color color = new Color(Integer.parseInt(data[2]));
+                Color fillColor = null;
+                if(!data[3].equals("null"))
+                    fillColor = new Color(Integer.parseInt(data[3]));
+                Map<String, Double> properties = new HashMap<>();
+                String[] strProperties = data[4].split("-"); // property1:value
+                for(String strProperty : strProperties) {
+                    String[] keyValue = strProperty.split(":");
+                    properties.put(keyValue[0], Double.valueOf(keyValue[1]));
+                }
+                Shape shape = null;
+                String[] className = data[0].split("\\."); // Backend.Class
+                switch (className[1]) {
+                    case "Circle":
+                        shape = new Circle();
+                        break;
+                    case "LineSegment":
+                        shape = new LineSegment();
+                        break;
+                    case "Square":
+                        shape = new Square();
+                        break;
+                    case "Rectangle":
+                        shape = new Rectangle();
+                        break;
+                    default:
+                        System.out.println("Error occured when deciding which shape to create"); // for debugging
+                }
+                if(shape != null) {
+                    shape.setPosition(new Point(Integer.parseInt(xyPosition[0]), Integer.parseInt(xyPosition[1])));
+                    shape.setColor(color);
+                    shape.setFillColor(fillColor);
+                    shape.setProperties(properties);
+                    shapes.add(shape);
+                }
+            }
+            return shapes;
+    }
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -215,8 +305,18 @@ public class MiniPaintWindow extends javax.swing.JFrame {
         });
 
         btnUndo.setText("Undo");
+        btnUndo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUndoActionPerformed(evt);
+            }
+        });
 
         btnRedo.setText("Redo");
+        btnRedo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRedoActionPerformed(evt);
+            }
+        });
 
         btnSave.setText("Save");
         btnSave.addActionListener(new java.awt.event.ActionListener() {
@@ -373,7 +473,6 @@ public class MiniPaintWindow extends javax.swing.JFrame {
             if(selectedShape == null) return;
             ColorDialog colorDialog = new ColorDialog(this, true, selectedShape);
             colorDialog.dispose();
-            drawingPanel.repaint();
         }
     }//GEN-LAST:event_btnColorizeActionPerformed
 
@@ -400,7 +499,6 @@ public class MiniPaintWindow extends javax.swing.JFrame {
             if(selectedShape == null) return;
             MoveDialog moveDialog = new MoveDialog(this, true, selectedShape);
             moveDialog.dispose();
-            drawingPanel.repaint();
         }
     }//GEN-LAST:event_btnMoveActionPerformed
 
@@ -427,22 +525,8 @@ public class MiniPaintWindow extends javax.swing.JFrame {
             // each line will be a shape format: className,posX-posY,color,fillColor,property1:value-property2:value [or] className,posX-posY,color,fillColor,property1:value 
             try (FileWriter fwrite = new FileWriter(selectedFile)) {
                 fwrite.write(""); // clear file
-                Shape[] shapes = engine.getShapes();
-                for(Shape shape : shapes) {
-                    Point position = shape.getPosition();
-                    Color color = shape.getColor();
-                    Color fillColor = shape.getFillColor();
-                    if(fillColor != null)
-                        fwrite.append(String.format("%s,%d-%d,%d,%d", shape.getClass().getName(), position.x, position.y, color.getRGB(), fillColor.getRGB()));
-                    else
-                        fwrite.append(String.format("%s,%d-%d,%d,null", shape.getClass().getName(), position.x, position.y, color.getRGB()));
-                    Map<String, Double> properties = shape.getProperties();
-                    String strProperties = ",";
-                    for(Map.Entry<String, Double> entry : properties.entrySet()) {
-                        strProperties += String.format("%s:%f-", entry.getKey(), entry.getValue());
-                    }
-                    fwrite.append(strProperties.substring(0, strProperties.length()-1));
-                    fwrite.append("\n"); // new line for next shape
+                for(String line : getLineFormattedShapes(engine.getShapes())) {
+                    fwrite.append(line);
                 }
                 JOptionPane.showMessageDialog(null, "Shapes saved successfully!");
                 System.out.println(selectedFile.getAbsolutePath());
@@ -473,53 +557,8 @@ public class MiniPaintWindow extends javax.swing.JFrame {
                 System.out.println("Error: You don't have permission to read from this file.");
             // Load shapes from file
             try (BufferedReader fread = new BufferedReader(new FileReader(filePath))) {
-                List<Shape> shapes = new ArrayList<>();
-                for(String line : fread.lines().toList()) {
-                    //skip empty line
-                    if(line.isEmpty())
-                        continue;
-                    // decode data in each line
-                    String[] data = line.split(",");
-                    // check if line format is correct
-                    if(data.length != 5)
-                        throw new IOException("File does not use correct format or was corrupted.");
-                    String[] xyPosition = data[1].split("-");
-                    Color color = new Color(Integer.parseInt(data[2]));
-                    Color fillColor = null;
-                    if(!data[3].equals("null"))
-                        fillColor = new Color(Integer.parseInt(data[3]));
-                    Map<String, Double> properties = new HashMap<>();
-                    String[] strProperties = data[4].split("-"); // property1:value
-                    for(String strProperty : strProperties) {
-                        String[] keyValue = strProperty.split(":");
-                        properties.put(keyValue[0], Double.valueOf(keyValue[1]));
-                    }
-                    Shape shape = null;
-                    String[] className = data[0].split("\\."); // Backend.Class
-                    switch (className[1]) {
-                        case "Circle":
-                            shape = new Circle();
-                            break;
-                        case "LineSegment":
-                            shape = new LineSegment();
-                            break;
-                        case "Square":
-                            shape = new Square();
-                            break;
-                        case "Rectangle":
-                            shape = new Rectangle();
-                            break;
-                        default:
-                            System.out.println("Error occured when deciding which shape to create"); // for debugging
-                    }
-                    if(shape != null) {
-                        shape.setPosition(new Point(Integer.parseInt(xyPosition[0]), Integer.parseInt(xyPosition[1])));
-                        shape.setColor(color);
-                        shape.setFillColor(fillColor);
-                        shape.setProperties(properties);
-                        shapes.add(shape);
-                    }
-                }
+                List<String> lines = fread.lines().toList();
+                List<Shape> shapes = getShapesFromLineFormat(lines.toArray(new String[0]));
                 // all shapes have been read from files successfully without corruption
                 // first remove old shapes
                 engine.removeAllShapes();
@@ -531,6 +570,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
                     addToComboBox(addShape);
                 }
                 comboBox.setSelectedIndex(0);
+                updateUndoState();
                 drawingPanel.repaint();
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null,"Error: "  + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -540,6 +580,60 @@ public class MiniPaintWindow extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_btnLoadActionPerformed
+
+    private void btnUndoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUndoActionPerformed
+        System.out.println("\nUndo Stack:");
+        for(int i=0; i<undoStack.size(); i++) {
+            System.out.println(Arrays.toString(undoStack.get(i)));
+        }
+        System.out.println("\nRedo Stack:");
+        for(int i=0; i<redoStack.size(); i++) {
+            System.out.println(Arrays.toString(redoStack.get(i)));
+        }
+        System.out.println("\n---------------\n");
+        if(undoStack.size() != 1) {
+            redoStack.add(undoStack.pop());
+            engine.removeAllShapes();
+            comboBox.removeAllItems();
+            comboBox.addItem("Choose Shape");
+            try {
+                for(Shape shape : getShapesFromLineFormat(undoStack.peek())) {
+                    engine.addShape(shape);
+                    addToComboBox(shape);
+                }
+            drawingPanel.repaint();
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null,"Error: "  + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_btnUndoActionPerformed
+
+    private void btnRedoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRedoActionPerformed
+        System.out.println("\nUndo Stack:");
+        for(int i=0; i<undoStack.size(); i++) {
+            System.out.println(Arrays.toString(undoStack.get(i)));
+        }
+        System.out.println("\nRedo Stack:");
+        for(int i=0; i<redoStack.size(); i++) {
+            System.out.println(Arrays.toString(redoStack.get(i)));
+        }
+        System.out.println("\n---------------\n");
+        if(!redoStack.isEmpty()) {
+            undoStack.add(redoStack.peek());
+            engine.removeAllShapes();
+            comboBox.removeAllItems();
+            comboBox.addItem("Choose Shape");
+            try {
+                for(Shape shape : getShapesFromLineFormat(redoStack.pop())) {
+                    engine.addShape(shape);
+                    addToComboBox(shape);
+                }
+                drawingPanel.repaint();
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null,"Error: "  + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_btnRedoActionPerformed
     
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */

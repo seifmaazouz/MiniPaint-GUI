@@ -117,10 +117,11 @@ public class MoveDialog extends javax.swing.JDialog {
             Point newPosition = new Point(x, y);
             if (mainWindow.isPositionOutOfBounds(newPosition)) {
                 JOptionPane.showMessageDialog(null, "Position is out of bounds!", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
             }
             else {
                 shape.setPosition(newPosition);
+                mainWindow.updateUndoState();
+                mainWindow.updateCanvas();
                 dispose();
             }
         } catch (IllegalArgumentException e) {
