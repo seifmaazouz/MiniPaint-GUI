@@ -495,7 +495,16 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_drawingPanelMousePressed
 
     private void btnResizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnResizeActionPerformed
-        // TODO
+        int index = comboBox.getSelectedIndex();
+        if(index != 0) {
+            String uniqueName = comboBox.getItemAt(index);
+            Shape selectedShape = getSelectedShape(uniqueName);
+            // Check if the shape exists
+            if(selectedShape == null) return;
+        
+        ResizeDialog resizeDialog = new ResizeDialog(this, true, selectedShape);
+        resizeDialog.dispose();
+        }
     }//GEN-LAST:event_btnResizeActionPerformed
 
     private void btnMoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoveActionPerformed
@@ -567,9 +576,9 @@ public class MiniPaintWindow extends javax.swing.JFrame {
                 List<Shape> shapes = getShapesFromLineFormat(lines.toArray(new String[0]));
                 // all shapes have been read from files successfully without corruption
                 // first remove old shapes
-//                engine.removeAllShapes();
-//                comboBox.removeAllItems();
-//                comboBox.addItem("Choose Shape");
+                engine.removeAllShapes();
+                comboBox.removeAllItems();
+                comboBox.addItem("Choose Shape");
                 // now load the shapes into engine and draw them
                 for(Shape addShape : shapes) {
                     engine.addShape(addShape);
