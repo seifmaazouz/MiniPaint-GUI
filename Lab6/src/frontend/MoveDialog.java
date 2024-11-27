@@ -1,7 +1,9 @@
 package frontend;
 
+import backend.LineSegment;
 import backend.Shape;
 import java.awt.Point;
+import java.util.Map;
 import javax.swing.JOptionPane;
 
 public class MoveDialog extends javax.swing.JDialog {
@@ -119,7 +121,16 @@ public class MoveDialog extends javax.swing.JDialog {
                 JOptionPane.showMessageDialog(null, "Position is out of bounds!", "Error", JOptionPane.ERROR_MESSAGE);
             }
             else {
+                Point oldPosition = shape.getPosition();
                 shape.setPosition(newPosition);
+                if(shape instanceof LineSegment) { // rescale line second point
+                    Map<String, Double> properties = shape.getProperties();
+                    double x2 = properties.get("endX");
+                    double y2 = properties.get("endY");
+                    properties.replace("endX", x2 + (x-oldPosition.x));
+                    properties.replace("endY", y2 + (y-oldPosition.y));
+                    shape.setProperties(properties);
+                }
                 mainWindow.updateUndoState();
                 mainWindow.updateCanvas();
                 dispose();

@@ -33,7 +33,6 @@ public class MiniPaintWindow extends javax.swing.JFrame {
         shapeDialog = new ShapeDialog(this, rootPaneCheckingEnabled);
         this.components = new JComponent[] {btnCircle, btnColorize, btnDelete, btnLine, btnRectangle, btnSquare, comboBox, drawingPanel, btnMove, btnResize, btnSave, btnLoad, btnUndo, btnRedo};
         saveDirectory = new File(System.getProperty("user.dir") + File.separator + "Saved Paintings"); // FIle.separator puts '\' or '/' according to OS
-        fileChooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt")); // Show only text files;
         undoStack = new Stack<>();
         undoStack.push(new String[0]); // initial empty canvas with no shapes
         redoStack = new Stack<>();
@@ -176,6 +175,15 @@ public class MiniPaintWindow extends javax.swing.JFrame {
                 }
             }
             return shapes;
+    }
+    
+    private JFileChooser createFileChooser() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt")); // Show only text files;
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.setDialogTitle("Load Shapes");
+        fileChooser.setCurrentDirectory(saveDirectory);
+        return fileChooser;
     }
     
     @SuppressWarnings("unchecked")
@@ -503,8 +511,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_btnMoveActionPerformed
 
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
-        fileChooser.setDialogTitle("Save Shapes");
-        fileChooser.setCurrentDirectory(saveDirectory); 
+        JFileChooser fileChooser = createFileChooser();
         int choice = fileChooser.showSaveDialog(null);
         if(choice == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
@@ -537,8 +544,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void btnLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoadActionPerformed
-        fileChooser.setDialogTitle("Load Shapes");
-        fileChooser.setCurrentDirectory(saveDirectory);
+        JFileChooser fileChooser = createFileChooser();
         int choice = fileChooser.showOpenDialog(null);
         if(choice == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
@@ -556,14 +562,14 @@ public class MiniPaintWindow extends javax.swing.JFrame {
             if(!selectedFile.canRead())
                 System.out.println("Error: You don't have permission to read from this file.");
             // Load shapes from file
-            try (BufferedReader fread = new BufferedReader(new FileReader(filePath))) {
+            try (BufferedReader fread = new BufferedReader(new FileReader(selectedFile.getAbsolutePath()))) {
                 List<String> lines = fread.lines().toList();
                 List<Shape> shapes = getShapesFromLineFormat(lines.toArray(new String[0]));
                 // all shapes have been read from files successfully without corruption
                 // first remove old shapes
-                engine.removeAllShapes();
-                comboBox.removeAllItems();
-                comboBox.addItem("Choose Shape");
+//                engine.removeAllShapes();
+//                comboBox.removeAllItems();
+//                comboBox.addItem("Choose Shape");
                 // now load the shapes into engine and draw them
                 for(Shape addShape : shapes) {
                     engine.addShape(addShape);
