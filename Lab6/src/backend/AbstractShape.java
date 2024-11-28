@@ -2,7 +2,7 @@ package backend;
 
 import java.awt.Color;
 import java.awt.Point;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class AbstractShape implements Shape {
@@ -13,7 +13,7 @@ public abstract class AbstractShape implements Shape {
     private String uniqueName;
     
     public AbstractShape() {
-        properties = new HashMap<>();
+        properties = new LinkedHashMap<>();
     }
     
     /* set position */

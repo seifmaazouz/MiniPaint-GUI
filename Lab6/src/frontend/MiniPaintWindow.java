@@ -25,7 +25,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     private final ShapeDialog shapeDialog;
     private final JComponent[] components;
     private final File saveDirectory;
-    private Stack<String[]> undoStack, redoStack;
+    private final Stack<String[]> undoStack, redoStack;
     
     public MiniPaintWindow() {
         initComponents(); 
@@ -190,7 +190,6 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        fileChooser = new javax.swing.JFileChooser();
         drawingPanel = new javax.swing.JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -212,9 +211,6 @@ public class MiniPaintWindow extends javax.swing.JFrame {
         btnRedo = new javax.swing.JButton();
         btnSave = new javax.swing.JButton();
         btnLoad = new javax.swing.JButton();
-
-        fileChooser.setAcceptAllFileFilterUsed(false);
-        fileChooser.setDialogType(javax.swing.JFileChooser.CUSTOM_DIALOG);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("Vector Drawing Application");
@@ -698,6 +694,5 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     private javax.swing.JButton btnUndo;
     private javax.swing.JComboBox<String> comboBox;
     private javax.swing.JPanel drawingPanel;
-    private javax.swing.JFileChooser fileChooser;
     // End of variables declaration//GEN-END:variables
 }

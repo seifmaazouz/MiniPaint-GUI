@@ -21,7 +21,7 @@ public class MiniPaintEngine implements DrawingEngine {
             circleCount = lineCount = squareCount = rectangleCount = 0; 
         }
         // check for duplicates
-        if(shapes.containsValue(shape)) 
+        if(shapes.containsValue(shape) || shape == null) 
             return;
         
         String uniqueName = "";

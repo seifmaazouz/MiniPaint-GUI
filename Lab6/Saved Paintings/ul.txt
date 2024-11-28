@@ -1,2 +1,3 @@
-backend.Circle,172-109,-16777216,-52429,radius:60.000000
-backend.LineSegment,373-404,-16777216,null,endY:55.000000-endX:5.000000
+backend.Circle,145-94,-16777216,-3407668,radius:90.000000
+backend.Circle,144-91,-16777216,-6750004,radius:9.000000
+backend.LineSegment,40-23,-16777216,null,endY:310.000000-endX:496.000000
