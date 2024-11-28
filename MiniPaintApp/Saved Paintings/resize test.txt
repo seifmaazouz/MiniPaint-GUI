@@ -1,0 +1,4 @@
+backend.Rectangle,468-115,-16777216,null,width:10.000000-height:20.000000
+backend.Circle,95-75,-16777216,null,radius:90.000000
+backend.LineSegment,126-36,-16777216,null,endY:50.000000-endX:412.000000
+backend.Square,284-311,-16777216,null,sideLength:90.000000

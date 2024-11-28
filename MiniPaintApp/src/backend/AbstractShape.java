@@ -2,7 +2,7 @@ package backend;
 
 import java.awt.Color;
 import java.awt.Point;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class AbstractShape implements Shape {
@@ -10,9 +10,10 @@ public abstract class AbstractShape implements Shape {
     private Map<String, Double> properties;
     private Color color;
     private Color fillColor;
+    private String uniqueName;
     
     public AbstractShape() {
-        properties = new HashMap<>();
+        properties = new LinkedHashMap<>();
     }
     
     /* set position */
@@ -21,6 +22,14 @@ public abstract class AbstractShape implements Shape {
     }
     public Point getPosition() {
         return position;
+    }
+    
+    /* set unique name */
+    public void setName(String uniqueName) {
+        this.uniqueName = uniqueName;
+    }
+    public String getName() {
+        return uniqueName;
     }
 
     /* update shape specific properties (e.g., radius) */

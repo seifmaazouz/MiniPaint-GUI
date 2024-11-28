@@ -9,16 +9,16 @@ public class ColorDialog extends javax.swing.JDialog {
     private Shape shape;
     private MiniPaintWindow mainWindow;
 
-    public ColorDialog(java.awt.Frame parent, boolean modal, Color penColor, Color fillColor, Shape shape, String shapeName) {
+    public ColorDialog(java.awt.Frame parent, boolean modal, Shape shape) {
         super(parent, modal);
         initComponents();
-        mainWindow = (MiniPaintWindow) parent;
-        this.penColor = penColor;
-        btnPenColor.setBackground(penColor);
-        this.fillColor = fillColor;
-        btnFillColor.setBackground(fillColor);
+        mainWindow = (MiniPaintWindow)parent;
         this.shape = shape;
-        lblShapeName.setText(shapeName);
+        this.penColor = shape.getColor();
+        btnPenColor.setBackground(penColor);
+        this.fillColor = shape.getFillColor();
+        btnFillColor.setBackground(fillColor);
+        lblShapeName.setText(shape.getName());
         this.setVisible(true);
     }
     
@@ -121,9 +121,9 @@ public class ColorDialog extends javax.swing.JDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(15, 15, 15)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblShapeSelected, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lblShapeName))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblShapeName, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(lblShapeSelected, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(btnPenColor, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -148,14 +148,15 @@ public class ColorDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_btnPenColorActionPerformed
 
     private void btnFillColorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFillColorActionPerformed
-        fillColor = JColorChooser.showDialog(null, "Choose Fill Color", penColor);
+        fillColor = JColorChooser.showDialog(null, "Choose Fill Color", fillColor);
         btnFillColor.setBackground(fillColor);
     }//GEN-LAST:event_btnFillColorActionPerformed
 
     private void btnDoneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDoneActionPerformed
         shape.setColor(penColor);
         shape.setFillColor(fillColor);
-        shape.draw(mainWindow.getCanvasGraphics());
+        mainWindow.updateUndoState();
+        mainWindow.updateCanvas();        
         this.dispose();
     }//GEN-LAST:event_btnDoneActionPerformed
 
