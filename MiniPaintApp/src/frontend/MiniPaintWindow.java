@@ -24,7 +24,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     private final MiniPaintEngine engine;
     private final ShapeDialog shapeDialog;
     private final JComponent[] components;
-    private final File saveDirectory;
+    private final static File SAVE_DIRECTORY =  new File(System.getProperty("user.home"), "Documents/MiniPaint Drawings");
     private final Stack<String[]> undoStack, redoStack;
     
     public MiniPaintWindow() {
@@ -32,7 +32,6 @@ public class MiniPaintWindow extends javax.swing.JFrame {
         engine = new MiniPaintEngine();
         shapeDialog = new ShapeDialog(this, rootPaneCheckingEnabled);
         this.components = new JComponent[] {btnCircle, btnColorize, btnDelete, btnLine, btnRectangle, btnSquare, comboBox, drawingPanel, btnMove, btnResize, btnSave, btnLoad, btnUndo, btnRedo};
-        saveDirectory = new File(System.getProperty("user.dir") + File.separator + "Saved Paintings"); // FIle.separator puts '\' or '/' according to OS
         undoStack = new Stack<>();
         undoStack.push(new String[0]); // initial empty canvas with no shapes
         redoStack = new Stack<>();
@@ -182,7 +181,15 @@ public class MiniPaintWindow extends javax.swing.JFrame {
         fileChooser.setFileFilter(new FileNameExtensionFilter("Text Files", "txt")); // Show only text files;
         fileChooser.setAcceptAllFileFilterUsed(false);
         fileChooser.setDialogTitle("Load Shapes");
-        fileChooser.setCurrentDirectory(saveDirectory);
+        // Create the folder if it doesn't exist in documents
+        if (!SAVE_DIRECTORY.exists()) {
+            boolean isCreated = SAVE_DIRECTORY.mkdirs();
+            if (!isCreated) {
+                System.out.println("Failed to create the directory.");
+                return null;
+            }
+        }
+        fileChooser.setCurrentDirectory(SAVE_DIRECTORY);
         return fileChooser;
     }
     
@@ -517,6 +524,8 @@ public class MiniPaintWindow extends javax.swing.JFrame {
 
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
         JFileChooser fileChooser = createFileChooser();
+        if(fileChooser == null)
+            return;
         int choice = fileChooser.showSaveDialog(null);
         if(choice == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
@@ -550,6 +559,8 @@ public class MiniPaintWindow extends javax.swing.JFrame {
 
     private void btnLoadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoadActionPerformed
         JFileChooser fileChooser = createFileChooser();
+        if(fileChooser == null)
+            return;
         int choice = fileChooser.showOpenDialog(null);
         if(choice == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
