@@ -24,7 +24,7 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     private final MiniPaintEngine engine;
     private final ShapeDialog shapeDialog;
     private final JComponent[] components;
-    private final static File SAVE_DIRECTORY =  new File(System.getProperty("user.home"), "Documents/MiniPaint Drawings");
+    private final static File SAVE_DIRECTORY =  new File(System.getProperty("user.home") + File.separator + "Documents", "MiniPaint Drawings");
     private final Stack<String[]> undoStack, redoStack;
     
     public MiniPaintWindow() {
