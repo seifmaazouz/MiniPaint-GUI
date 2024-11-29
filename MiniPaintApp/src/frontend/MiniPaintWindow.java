@@ -85,9 +85,10 @@ public class MiniPaintWindow extends javax.swing.JFrame {
     }
     private void addToComboBox(Shape shape) {
         String uniqueName = shape.getName();
-        if(uniqueName != null)
+        if(uniqueName != null) {
             comboBox.addItem(uniqueName);
-//        comboBox.setSelectedIndex(0); // Select choose shape
+            comboBox.setSelectedIndex(0); // Select choose shape
+        }
     }
     
     private void removeFromComboBox(Shape shape) {

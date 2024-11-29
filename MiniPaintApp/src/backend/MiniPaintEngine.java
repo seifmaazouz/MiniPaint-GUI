@@ -2,7 +2,7 @@ package backend;
 
 import java.awt.BasicStroke;
 import java.awt.RenderingHints;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class MiniPaintEngine implements DrawingEngine {
@@ -10,7 +10,7 @@ public class MiniPaintEngine implements DrawingEngine {
     int circleCount, lineCount, squareCount, rectangleCount;
 
     public MiniPaintEngine () {
-        shapes = new HashMap<>();
+        shapes = new LinkedHashMap<>();
         circleCount = lineCount = squareCount = rectangleCount = 0;
     }
     
